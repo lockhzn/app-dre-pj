@@ -1,58 +1,12 @@
-import streamlit as st
-import pandas as pd
-
-# Configuração
-st.set_page_config(page_title="Dashboard DRE PJ 2026", layout="wide", page_icon="🏫")
-
-# Carregar Dados
-@st.cache_data
-def get_data():
-    return pd.read_csv("escolas.csv")
-
-try:
-    df = get_data()
-except:
-    st.error("Erro: Certifique-se de que o arquivo 'escolas.csv' está na mesma pasta do código.")
-    st.stop()
-
-# Título e Filtro
-st.title("🏫 Sistema de Gestão Educacional - DRE PJ")
-unidade = st.selectbox("Selecione a Unidade Escolar para análise:", df['Unidade'].unique())
-
-# Filtrar unidade específica
-d = df[df['Unidade'] == unidade].iloc[0]
-
-# --- Layout do App ---
-col1, col2, col3 = st.columns([1, 1, 1])
-
-with col1:
-    st.markdown("### 📍 Identificação")
-    st.info(f"**Tipo:** {d['Tipo']} \n\n **EOL:** {d['EOL']}")
-    st.write(f"**Equipe Gestora:**\n{d['Equipe']}")
-
-with col2:
-    st.markdown("### 📊 Demanda e Inclusão")
-    ocupacao = (d['Matriculas'] / d['Vagas'])
-    st.metric("Matrículas", f"{d['Matriculas']} / {d['Vagas']}")
-    st.progress(ocupacao)
-    st.write(f"**Alunos com Deficiência (CEFAI):** {d['CEFAI_Deficiencia']}")
-
-with col3:
-    st.markdown("### 💰 Financeiro (PTRF)")
-    if d['PTRF'] > 0:
-        st.metric("Saldo Atual", f"R$ {d['PTRF']:,.2f}")
-    else:
-        st.warning("⚠️ Saldo PTRF Zerado")
-        st.metric("Saldo Atual", "R$ 0,00")
-
-st.markdown("---")
-
-# Seção de Alertas Jurídicos/Supervisão
-st.markdown("### ⚖️ Assessoria Jurídica e Supervisão")
-if "Sem ocorrências" in d['Processos']:
-    st.success("✅ Nenhuma pendência ou processo crítico registrado para esta unidade.")
-else:
-    st.error(f"**Ocorrências Registradas:**\n\n {d['Processos']}")
-
-# Rodapé
-st.markdown("<br><br><small>DRE PJ - Dados atualizados para o ciclo 2026</small>", unsafe_allow_html=True)
+Unidade,Tipo,EOL,Equipe,PTRF,Matriculas,Vagas,Processos,CEFAI_Deficiencia
+CEU JAGUARE,CEI,19392,Fernando Jose / Isabel Cristina / Maria Valeria,32288.74,372,406,Atestados - CAP - Supervisão,0
+JAMIR DAGIR,CEI,400062,Valeria Russano / Denise Marques / Fernanda Batista,21693.61,108,113,Sem ocorrências,0
+RENATO ANT. CHECCHIA,CEI,400220,Joicemara Frizarini / Priscilla Raed / Sara Cristina,37363.92,73,90,Sem ocorrências,0
+ANA MARIA POPPOVIC,EMEI,90395,Roper Pires / Roberta Picon / Adriana Rodrigues,111657.02,75,75,Sem ocorrências,3
+ANT. RAPOSO TAVARES,EMEI,91693,Aurora Maria / Carolina Bugallo / Tatiane da Conc.,134699.68,162,166,Sem ocorrências,4
+EMEI JAGUARE,EMEI,19326,Tatiana Pinheiro / Ana Cristina / Sheyla Rodrigues,505.02,420,447,Suspeita de Maus Tratos / Conduta servidora,26
+JEAN PIAGET,EMEI,90344,Norma Nogueira / Valeria Dall Olio / Christiane Godoy,352818.09,111,112,Ar condicionado pendente,5
+LEOPOLDINA,EMEI,90352,Claudia Maria / Alessandra Arrigoni / Fabio Tamizari,0.00,220,221,Conduta servidora,14
+DILERMANDO DIAS,EMEF,93106,Rosilene Silva / Simone e Juliana / Andrea e Pamella,35094.04,698,752,Inquérito PROCED / Exposição Indevida / Assédio,29
+ESPIRIDIAO ROSAS,EMEF,92835,Marilia Tais / Meire e Vanessa / Carlos e Luciane,55535.87,841,876,Violência / Auto infligida / PCD sem acompanhamento,44
+JOSE FERRAZ DE CAMPOS,EMEF,94579,Francistonia Maria / Silvana Zuculin / Dayse Aline,9978.22,495,552,Furto de Notebook,30
