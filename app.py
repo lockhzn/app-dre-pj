@@ -4,55 +4,46 @@ import pandas as pd
 # Configuração
 st.set_page_config(page_title="Dashboard DRE PJ 2026", layout="wide", page_icon="🏫")
 
-# Carregar Dados
+# Função de carregamento "Inteligente"
 @st.cache_data
 def get_data():
-    return pd.read_csv("escolas.csv")
+    # Tenta detectar automaticamente se é vírgula ou ponto e vírgula
+    return pd.read_csv("escolas.csv", sep=None, engine='python', encoding='utf-8-sig')
+
+st.title("🏫 Sistema de Gestão Educacional - DRE PJ")
 
 try:
     df = get_data()
-except:
-    st.error("Erro: Certifique-se de que o arquivo 'escolas.csv' está na mesma pasta do código.")
-    st.stop()
+    
+    # Filtro de Unidade
+    unidade = st.selectbox("Selecione a Unidade Escolar:", df['Unidade'].unique())
+    d = df[df['Unidade'] == unidade].iloc[0]
 
-# Título e Filtro
-st.title("🏫 Sistema de Gestão Educacional - DRE PJ")
-unidade = st.selectbox("Selecione a Unidade Escolar para análise:", df['Unidade'].unique())
+    # --- Layout ---
+    col1, col2, col3 = st.columns([1, 1, 1])
 
-# Filtrar unidade específica
-d = df[df['Unidade'] == unidade].iloc[0]
+    with col1:
+        st.markdown("### 📍 Identificação")
+        st.info(f"**Tipo:** {d['Tipo']} \n\n **EOL:** {d['EOL']}")
+        st.write(f"**Equipe Gestora:**\n{d['Equipe']}")
 
-# --- Layout do App ---
-col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.markdown("### 📊 Demanda e Inclusão")
+        # Tratando caso o valor não seja número
+        mat = pd.to_numeric(d['Matriculas'], errors='coerce') or 0
+        vag = pd.to_numeric(d['Vagas'], errors='coerce') or 1
+        st.metric("Matrículas", f"{int(mat)} / {int(vag)}")
+        st.progress(min(float(mat/vag), 1.0))
 
-with col1:
-    st.markdown("### 📍 Identificação")
-    st.info(f"**Tipo:** {d['Tipo']} \n\n **EOL:** {d['EOL']}")
-    st.write(f"**Equipe Gestora:**\n{d['Equipe']}")
+    with col3:
+        st.markdown("### 💰 Financeiro (PTRF)")
+        valor_ptrf = pd.to_numeric(d['PTRF'], errors='coerce') or 0
+        st.metric("Saldo Atual", f"R$ {valor_ptrf:,.2f}")
 
-with col2:
-    st.markdown("### 📊 Demanda e Inclusão")
-    ocupacao = (d['Matriculas'] / d['Vagas'])
-    st.metric("Matrículas", f"{d['Matriculas']} / {d['Vagas']}")
-    st.progress(ocupacao)
-    st.write(f"**Alunos com Deficiência (CEFAI):** {d['CEFAI_Deficiencia']}")
+    st.divider()
+    st.markdown("### ⚖️ Assessoria Jurídica e Supervisão")
+    st.warning(d['Processos'])
 
-with col3:
-    st.markdown("### 💰 Financeiro (PTRF)")
-    if d['PTRF'] > 0:
-        st.metric("Saldo Atual", f"R$ {d['PTRF']:,.2f}")
-    else:
-        st.warning("⚠️ Saldo PTRF Zerado")
-        st.metric("Saldo Atual", "R$ 0,00")
-
-st.markdown("---")
-
-# Seção de Alertas Jurídicos/Supervisão
-st.markdown("### ⚖️ Assessoria Jurídica e Supervisão")
-if "Sem ocorrências" in d['Processos']:
-    st.success("✅ Nenhuma pendência ou processo crítico registrado para esta unidade.")
-else:
-    st.error(f"**Ocorrências Registradas:**\n\n {d['Processos']}")
-
-# Rodapé
-st.markdown("<br><br><small>DRE PJ - Dados atualizados para o ciclo 2026</small>", unsafe_allow_html=True)
+except Exception as e:
+    st.error(f"⚠️ Erro ao ler os dados: {e}")
+    st.info("Dica: Verifique se o nome das colunas no Excel está exatamente igual ao original.")
