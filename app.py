@@ -7,13 +7,12 @@ st.set_page_config(page_title="Dashboard DRE PJ 2026", layout="wide", page_icon=
 # Função de carregamento "Inteligente"
 @st.cache_data
 def get_data():
-    # Tenta detectar automaticamente se é vírgula ou ponto e vírgula
-    return pd.read_csv("escolas.csv", sep=None, engine='python', encoding='utf-8-sig')
-
-st.title("🏫 Sistema de Gestão Educacional - DRE PJ")
-
-try:
-    df = get_data()
+    # O Excel no Brasil usa 'latin-1' ou 'ISO-8859-1' por padrão.
+    # Este código tenta ler com Latin-1, e se der erro, tenta UTF-8.
+    try:
+        return pd.read_csv("escolas.csv", sep=None, engine='python', encoding='latin-1')
+    except:
+        return pd.read_csv("escolas.csv", sep=None, engine='python', encoding='utf-8-sig')
     
     # Filtro de Unidade
     unidade = st.selectbox("Selecione a Unidade Escolar:", df['Unidade'].unique())
